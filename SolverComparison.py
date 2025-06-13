@@ -53,7 +53,7 @@ class INNInversionSolver(InversionSolver):
         train_data_folder = "./training_data/"
         load_network_path = "./saved_network/"
         train_data_h5name = "2_5_layers_100000.h5"
-        load_network_name = "inn_best.pth"
+        load_network_name = "PaperModel.pth"
         with h5py.File(train_data_folder + train_data_h5name, 'r') as h5f:
             curve_raw = np.array(h5f['curve'])
 
@@ -122,12 +122,12 @@ class INNInversionSolver(InversionSolver):
             inv_2d_model = np.flip((self.inverted_result),axis=0)
             L2Norm = utl.relative_l2_norm(true_2d_model,inv_2d_model)
             print('L2 Norm:', L2Norm)
-            highest_trace,lowest_trace,highest_samples,lowest_samples = pt.plot_results(true_2d_model, inv_2d_model,self.all_z_samples)
+            highest_trace,lowest_trace,highest_samples,lowest_samples, tmaxv, tminval= pt.plot_results(true_2d_model, inv_2d_model,self.all_z_samples)
             combined_min = min(np.min(highest_samples), np.min(lowest_samples)) -.1
             combined_max = max(np.max(highest_samples), np.max(lowest_samples)) +.1
             x_lim_range = (combined_min,combined_max)
-            pt.plot_uncertainty_distribution(highest_samples,x_lim_range,letter='a')
-            pt.plot_uncertainty_distribution(lowest_samples,x_lim_range,letter='b')
+            pt.plot_uncertainty_distribution(highest_samples,x_lim_range,tmaxv,letter='a')
+            pt.plot_uncertainty_distribution(lowest_samples,x_lim_range,tminval,letter='b')
             pt.plot_1d_slice(highest_trace,self.all_z_samples[highest_trace], self.true_rho_log, self.tvd_pixel, self.tvd_edge,letter= 'a')
             pt.plot_1d_slice(lowest_trace,self.all_z_samples[lowest_trace], self.true_rho_log, self.tvd_pixel, self.tvd_edge, letter='b')
 class LmaInversionSolver(InversionSolver):

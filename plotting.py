@@ -7,6 +7,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
+import matplotlib.pyplot as plt
 
 def plot_1d_slice(
     trace,
@@ -22,39 +24,45 @@ def plot_1d_slice(
     percentile_low = np.percentile(inverted_rho_log, 10, axis=1)
     percentile_high = np.percentile(inverted_rho_log, 90, axis=1)
 
-
     # Create figure and axis
-    fig, ax = plt.subplots(figsize=(6, 6))
+    fig, ax = plt.subplots(figsize=(5, 6))
+    min_inverted = np.min(inverted_rho_log)
+    max_inverted = np.max(inverted_rho_log)
+
+    cmap = plt.cm.viridis.copy()  # Copy to avoid modifying the original colormap
+    cmap.set_under("grey")  # Set the color for values below vmin to white
 
     # 2D histogram of the inverted data
-    ax.hist2d(
+    h = ax.hist2d(
         inverted_rho_log.flatten(),
         tvd_pixel.flatten(),
         bins=[150, n_pixel],
-        range=[[0,3], [tvd_edge[0], tvd_edge[-1]]],
-        cmap="magma"
+        range=[[0.8,2.2], [tvd_edge[0], tvd_edge[-1]]],
+        cmap=cmap,
+        vmin=0.001
     )
 
+    # Add colorbar
+    cbar = plt.colorbar(h[3], ax=ax)
+    cbar.set_label("Density", fontsize=11, color="black")
+
     # Superimpose horizontal lines:
-    # 1. True model
     ax.stairs(
         true_rho_log[trace].flatten(),
         tvd_edge,
         orientation="horizontal",
         linewidth=2.5,
-        color="red",
+        color="blue",
         label="True Model"
     )
-    # 2. Mean of inverted model
     ax.stairs(
         mean_inv,
         tvd_edge,
         orientation="horizontal",
         linewidth=2.5,
-        color="#00FFFF",
+        color="red",
         label="Mean Inversion"
     )
-    # 3. 10th percentile
     ax.stairs(
         percentile_low,
         tvd_edge,
@@ -64,7 +72,6 @@ def plot_1d_slice(
         linestyle="--",
         label="10th/90th Percentile"
     )
-    # 4. 90th percentile
     ax.stairs(
         percentile_high,
         tvd_edge,
@@ -74,8 +81,8 @@ def plot_1d_slice(
         linestyle="--"
     )
 
-    # Axis labels and inversion of y-axis
-    ax.set_xlabel(f"log10($\\rho$) ($\\Omega$·ft)\n\n({letter})", color='black', fontsize=11)
+    # Axis labels and inversion of y-axis 
+    ax.set_xlabel(f"$\\mathrm{{log}}_{{10}}(\\rho)\\, (\\Omega \\cdot \\text{{ft}})$\n\n ({letter})", color='black', fontsize=11)
     ax.set_ylabel("Depth (ft)", color='black', fontsize=11)
     ax.invert_yaxis()
 
@@ -83,7 +90,7 @@ def plot_1d_slice(
     ax.set_yticklabels([4950, 5000, 5050])
 
     # Plot title
-    ax.set_title("1D Resistivity Slice at x = {}".format(trace * 10), color='black', fontsize=12)
+    ax.set_title("1D Resistivity Slice at X = {}".format(trace * 10), color='black', fontsize=12)
 
     ax.text(
         0.05,
@@ -109,7 +116,7 @@ def plot_1d_slice(
     # Show the plot
     plt.show()
 
-def plot_uncertainty_distribution(predicted_samples_list,x_lim_range,letter='z'):
+def plot_uncertainty_distribution(predicted_samples_list,x_lim_range,true_val,letter='z'):
     """
     Plots the distribution of predicted samples to visualize uncertainty and displays the 80% confidence interval.
     
@@ -130,13 +137,14 @@ def plot_uncertainty_distribution(predicted_samples_list,x_lim_range,letter='z')
     # Plot the distribution
     plt.figure(figsize=(6,6))
     
-    sns.histplot(predicted_samples_array, bins=20, kde=True, color='blue', edgecolor='white')
+    sns.histplot(predicted_samples_array, bins=20, kde=True, color='green', edgecolor='white')
     
     # Plot vertical lines for the 80% confidence interval
     plt.axvline(ci_80[0], color='black', linestyle='-',linewidth=3, label=f'80% CI lower: {ci_80[0]:.2f}')
     plt.axvline(ci_80[1], color='black', linestyle='-', linewidth=3,label=f'80% CI upper: {ci_80[1]:.2f}')
     plt.axvline(mean_value, color='red', linestyle='--', linewidth=3,label=f'Mean: {mean_value:.2f}')
     plt.axvline(median_value, color='yellow', linestyle='--', linewidth=3,label=f'Median: {median_value:.2f}')
+    plt.axvline(true_val, color='blue', linestyle='--', linewidth=3,label=f'True Value: {true_val:.2f}')
 
     plt.xlim(x_lim_range)
 
@@ -304,7 +312,6 @@ def plot_results(true_2d_model, inv_2d_model, predicted_samples):
     avg_uncertainty = np.mean(_CI, axis=0)
     max_avg_uncertainty_index = np.argmax(avg_uncertainty)
     min_avg_uncertainty_index = np.argmin(avg_uncertainty)
-
     max_uncertainty_index = np.unravel_index(np.argmax(_CI), _CI.shape)
     min_uncertainty_index = np.unravel_index(np.argmin(_CI), _CI.shape)
 
@@ -314,7 +321,8 @@ def plot_results(true_2d_model, inv_2d_model, predicted_samples):
 
     print(_CI[max_uncertainty_index[0]][max_uncertainty_index[1]])
     print(_CI[min_uncertainty_index[0]][min_uncertainty_index[1]])
-
+    true_max_val = true_2d_model[max_uncertainty_index]
+    true_min_val = true_2d_model[min_uncertainty_index]
     max_vals = predicted_samples[max_uncertainty_index]
     min_vals = predicted_samples[min_uncertainty_index]
 
@@ -323,7 +331,7 @@ def plot_results(true_2d_model, inv_2d_model, predicted_samples):
 
     plt.show()
 
-    return max_avg_uncertainty_index, min_avg_uncertainty_index, max_vals, min_vals
+    return max_avg_uncertainty_index, min_avg_uncertainty_index, max_vals, min_vals,true_max_val,true_min_val
 
 def plot_2d_with_misfit_only(true_2d_model,inv_2d_models,inv_2d_models_titles):
     fig, axs = plt.subplots(len(inv_2d_models), 1, figsize=(6,9),constrained_layout=True)
