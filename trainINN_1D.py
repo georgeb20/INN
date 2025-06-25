@@ -17,7 +17,7 @@ if __name__ == "__main__":
     train_data_folder = "./training_data/"
     train_data_h5name = "2_5_layers_100000.h5"
 
-    epoch = 25
+    epoch = 200 
 
     with h5py.File(train_data_folder + train_data_h5name, 'r') as h5f:
         rho_raw = np.log10(np.array(h5f['rho']))  # shape = (n_trace, n_pixel)
@@ -64,7 +64,7 @@ if __name__ == "__main__":
     in_test_ts = torch.from_numpy(in_test)
     out_test_ts = torch.from_numpy(out_test)
 
-    inn = net.define_inn(tot_dim)
+    inn = net.define_inn(tot_dim, n_layer=5)
     inn.to(device)
 
     dim_dict = {"model": x_dim,
@@ -73,17 +73,22 @@ if __name__ == "__main__":
                 "pad": e_dim,
                 }
 
-    weight_dict = {"forward": 1,
-                   "inverse": 1,
-                   "latent": 0.1, 
-                   "pad": 0.1,
-                   "boundary": 0.1,
+    # weight_dict = {"forward": 0.0066325,
+    #                "inverse": 0.0066634,
+    #                "latent":  0.0012180, 
+    #                "pad":     0.0010331,
+    #                "boundary":0.0049588,
+    #               }
+    weight_dict = {"forward": 4.683579495772815,
+                   "inverse": 2.346344381183016,
+                   "latent":  1.6935092760189019, 
+                   "pad":     1.2761187405742211,
+                   "boundary":0.5635023718959832,
                   }
-
     loss_curve = net.inn_forward(inn, device, loader, epoch,
                     in_train_ts, out_train_ts, in_test_ts, out_test_ts,
                     dim_dict, weight_dict,
-                    lr=0.001, weight_decay=0.00001, gamma=0.990,
+                    lr=0.00140748034806598, weight_decay=1.1777147444576608e-05, gamma=0.9587121634680469,
                     save_folder="./saved_network/")
 
     timestamp = datetime.today().strftime('%m-%d-%Y_%H-%M-%S')

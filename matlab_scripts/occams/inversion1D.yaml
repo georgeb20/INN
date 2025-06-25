@@ -1,0 +1,38 @@
+partition: "batch"
+numOfWorkers: 70
+inversion_method: "occam"
+FwdOnly: false
+SaveJacobian: false
+SaveSensitivity: false
+FwdData: "George_fwd_1d_SLB_240718_02-58-35_model_curve2d.mat"
+anisotropy: 1 # specify the fixed anisotropy, anisotropy will not be inverted
+nParamsAnis: 1 # number of anisotropic parameters, this will be overwritten by the `anisotropy` parameter
+InvGroupPts: 1  # number of measurement points for one inversion station
+inv_station_start: 1 # starting station number
+inv_station_end: 80 # ending station number
+formation_type: "layered"
+stderr: 0.05  # standard error of data
+targetRMS: 1 # target RMS
+rmsTol: 0.001  # RMS tolerence
+modelLog10Mu: 6 # starting log10Mu
+cBoundsTransform: 'linear'
+bandPassFactor: 15.0
+lowerBoundGlobal: 0.03
+upperBoundGlobal: 1000
+lowerBoundAnisGlobal: 0.5
+upperBoundAnisGlobal: 10
+weightSpaceFreq: 'nonuniform'
+weightv: 0.1 # weight for veritcal derivative  ############################################################################################
+fdstep: 0.005 # step of finite difference for computing Jacobian
+inversionSteps: 0 # number of inversion steps
+tool_investigation_scope: [-70 70]  ##################
+maxItr: 15
+resolution_of_pixel: 5  ##################
+noise_std: 0.00
+initial_is_homo: true
+mesh_type: "equal"  ##################
+computation_type: "noiter" # 'iter' or 'noiter'  ##################
+initial_type: "homo"
+homo_Rh: 1 # ohm-m  ##################
+matfile: ""  ##################
+parallel_run: true  ##################

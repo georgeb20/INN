@@ -6,14 +6,17 @@ from objective import objective
 os.makedirs("./saved_network", exist_ok=True)
 
 study = optuna.create_study(
-    study_name="INN_tuning",
-    direction="minimize",
+    directions=["minimize"]*5,          # five objectives
+    study_name="inn_pareto",
     sampler=TPESampler(seed=2024, multivariate=True),
-    pruner =MedianPruner(n_startup_trials=10, n_warmup_steps=3)
+    pruner=MedianPruner(n_startup_trials=10, n_warmup_steps=3)
 )
-
-study.optimize(objective, n_trials=60, timeout=None)
+study.optimize(objective, n_trials=60)
 
 joblib.dump(study, "./saved_network/optuna_study.pkl")
 study.trials_dataframe().to_csv("./saved_network/hparam_search_log.csv", index=False)
-print("Best params:", study.best_trial.params)
+
+# Print all Pareto-optimal parameter sets
+print("Pareto-optimal solutions:")
+for t in study.best_trials:
+    print(f"Trial {t.number}: objectives={t.values}, params={t.params}")

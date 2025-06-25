@@ -54,11 +54,11 @@ DATA = _prepare_data("../training_data/2_5_layers_100000.h5")
 def objective(trial: optuna.Trial) -> float:
     # ––– hyper-params to sample –––
     weights = {
-        "forward" : trial.suggest_loguniform("λ_forward",  1e-3, 10.0),
-        "inverse" : trial.suggest_loguniform("λ_inverse",  1e-3, 10.0),
-        "latent"  : trial.suggest_loguniform("λ_latent",   1e-3, 10.0),
-        "pad"     : trial.suggest_loguniform("λ_pad",      1e-3, 10.0),
-        "boundary": trial.suggest_loguniform("λ_boundary", 1e-3, 10.0),
+        "forward" : trial.suggest_loguniform("λ_forward",  1e-2, 10.0),
+        "inverse" : trial.suggest_loguniform("λ_inverse",  1e-2, 10.0),
+        "latent"  : trial.suggest_loguniform("λ_latent",   1e-2, 10.0),
+        "pad"     : trial.suggest_loguniform("λ_pad",      1e-2, 10.0),
+        "boundary": trial.suggest_loguniform("λ_boundary", 1e-2, 10.0),
     }
     n_layer      = trial.suggest_int("n_layer", 3, 6)
     lr           = trial.suggest_loguniform("lr", 1e-4, 3e-3)
@@ -73,7 +73,7 @@ def objective(trial: optuna.Trial) -> float:
     inn = net.define_inn(io_dim=tot_dim, n_layer=n_layer).to(DEVICE)
 
     # ––– quick train (8 epochs) –––
-    train_curve, test_curve = net.inn_forward(
+    train_curve, test_curve, _ = net.inn_forward(
         inn, DEVICE, loader, epoch=8,
         in_train_ts=in_tr,  out_train_ts=out_tr,
         in_test_ts=in_te,   out_test_ts=out_te,
@@ -81,9 +81,13 @@ def objective(trial: optuna.Trial) -> float:
         lr=lr, weight_decay=wd, gamma=gamma,
         save_folder="./saved_network/tmp_"
     )
+    L_pred_t, L_inv_t, L_latent_t, L_pad_t, L_boundary_t = test_curve[-1,:5]
 
-    # keep curves for later visualisation
-    trial.set_user_attr("train_curve", train_curve)
-    trial.set_user_attr("test_curve",  test_curve)
+    return (
+        L_pred_t,
+        L_inv_t,
+        L_latent_t,
+        L_pad_t,
+        L_boundary_t
+    )
 
-    return test_curve[-1, 5]    # final total loss

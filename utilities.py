@@ -182,11 +182,37 @@ def model_misfit(true_log_model, inverted_log_model, type=None):
         raise TypeError
     return model_log_misfit
 
-def relative_l2_norm(true_matrix, predicted_matrix):
-    true_norm = np.linalg.norm(true_matrix,ord=2)
-    epsilon = 1e-10
-    true_norm = np.maximum(true_norm, epsilon)
+import numpy as np
 
-    error_matrix = true_matrix - predicted_matrix
-    error_norm = np.linalg.norm(error_matrix,ord=2)
-    return error_norm
+def l2_norm(true_matrix, predicted_matrix, *, relative=True, eps=1e-12):
+    """
+    Compute the L2 (Frobenius) misfit between `predicted_matrix` and `true_matrix`.
+
+    Parameters
+    ----------
+    true_matrix : np.ndarray
+        Ground-truth resistivity model (2-D or 3-D array).
+    predicted_matrix : np.ndarray
+        Inverted/estimated resistivity model, same shape as `true_matrix`.
+    relative : bool, default True
+        • True  → return relative misfit in percent  
+        • False → return absolute Frobenius norm (same units as input)
+    eps : float, default 1e-12
+        Small stabiliser to avoid division by zero.
+
+    Returns
+    -------
+    float
+        Scalar misfit (percent if `relative=True`, otherwise in Ω·m, Ω·ft, etc.).
+    """
+    # Difference between models
+    diff = predicted_matrix - true_matrix
+
+    # Frobenius norms  (np.linalg.norm(..., 'fro')  ≡ √Σ_ij a_ij² )
+    diff_norm  = np.linalg.norm(diff,        ord='fro')
+    if not relative:
+        return diff_norm                    # Absolute misfit
+
+    true_norm  = np.linalg.norm(true_matrix, ord='fro')
+    return 100.0 * diff_norm / (true_norm + eps)
+

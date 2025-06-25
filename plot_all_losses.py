@@ -1,7 +1,7 @@
 import h5py
 import matplotlib.pyplot as plt
 
-h5_file_path = "./saved_network/loss_curve_02-11-2025_21-46-18.h5"  # Replace <timestamp> with the actual timestamp
+h5_file_path = "./saved_network/loss_curve_06-14-2025_15-20-11.h5"  # Replace <timestamp> with the actual timestamp
 
 with h5py.File(h5_file_path, 'r') as h5f:
     train_L_pred = h5f['train_L_pred'][:]
